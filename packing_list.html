@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Список вещей в отпуск</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f5f7;          /* фон страницы */
+    --surface: #ffffff;     /* карточки */
+    --surface2: #f2f2f7;    /* вторичный фон */
+
+    --border: #e5e5ea;
+    --border2: #d1d1d6;
+
+    --text: #1c1c1e;        /* основной текст */
+    --text2: #636366;       /* вторичный текст */
+    --text3: #8e8e93;       /* подписи */
+
+    --accent: #34c759;      /* основной акцент */
+    --blue: #007aff;        /* ссылки/кнопки */
+    --teal: #4fc8a0;        /* малыш/акценты */
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 48px; }
+
+  .header { margin-bottom: 24px; }
+  .header-title { font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; margin-bottom: 4px; }
+  .header-sub { font-size: 12px; color: var(--text2); }
+
+  .luggage-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .lug { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; text-align: center; }
+  .lug-icon { font-size: 18px; margin-bottom: 4px; }
+  .lug-val { font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 600; }
+  .lug-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; text-align: center; }
+  .stat-val { font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 600; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  .progress-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 20px; }
+  .progress-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .bar-bg { background: var(--surface2); border-radius: 99px; height: 6px; }
+  .bar-fill { background: var(--accent); border-radius: 99px; height: 6px; transition: width 0.3s; }
+
+  .section { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+  .section-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; background: var(--surface); user-select: none; }
+  .section-header:hover { background: var(--surface2); }
+  .section-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .section-count { font-size: 11px; color: var(--text3); }
+  .section-chevron { color: var(--text3); font-size: 11px; transition: transform 0.2s; }
+
+  .section-body { display: none; border-top: 1px solid var(--border); }
+  .section-body.open { display: block; }
+
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; position: relative; }
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: rgba(255,255,255,0.02); }
+  .item.checked { opacity: 0.45; }
+
+  .checkbox { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border2); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .item.checked .checkbox { background: var(--accent); border-color: var(--accent); }
+  .checkmark { color: #0f1117; font-size: 11px; font-weight: 700; display: none; }
+  .item.checked .checkmark { display: block; }
+
+  .item-content { flex: 1; }
+  .item-name { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .item.checked .item-name { text-decoration: line-through; color: var(--text3); }
+  .item-note { font-size: 11px; color: var(--text3); margin-top: 2px; font-weight: 300; }
+  .reset-btn { width: 100%; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); font-size: 12px; cursor: pointer; margin-top: 12px; font-family: 'Inter', sans-serif; }
+  .reset-btn:hover { background: var(--surface2); color: var(--text); }
+
+  .note-box { background: rgba(79,200,160,0.06); border: 1px solid rgba(79,200,160,0.2); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--text2); line-height: 1.6; }
+  .item:hover .item-actions { opacity: 1; }
+  .item-actions { display: flex; gap: 4px; opacity: 1; flex-shrink: 0; }
+  .action-btn { background: none; border: none; border-radius: 6px; color: var(--text3); font-size: 16px; padding: 4px 5px; cursor: pointer; line-height: 1; }
+  .action-btn:hover { background: var(--surface2); color: var(--text2); }
+  .action-btn.del { background: #e53935; color: #fff; border-radius: 6px; font-size: 13px; font-weight: 700; padding: 4px 7px; }
+  .action-btn.del:hover { background: #c62828; color: #fff; }
+  .add-item-row { display: none; flex-direction: column; gap: 6px; padding: 10px 14px; border-top: 1px solid var(--border); background: rgba(79,200,160,0.03); }
+  .add-item-row.open { display: flex; }
+  .section-add-btn { background: var(--accent); border: none; border-radius: 6px; color: #0f1117; font-size: 16px; font-weight: 700; width: 26px; height: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
+  .section-add-btn:hover { filter: brightness(1.12); }
+  .copy-btn { width: 100%; padding: 8px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text3); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin: 0; }
+  .copy-btn:hover { background: var(--surface2); color: var(--text2); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+  .add-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 12px; padding: 6px 10px; font-family: 'Inter', sans-serif; outline: none; box-sizing: border-box; }
+  .add-input:focus { border-color: var(--accent); }
+  .add-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--radius-sm); color: #0f1117; font-size: 13px; font-weight: 600; padding: 8px; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .edit-overlay { display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .edit-overlay.show { display: flex; }
+  .edit-modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 380px; }
+  .edit-modal h3 { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+  .edit-field { margin-bottom: 10px; }
+  .edit-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .edit-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; padding: 8px 10px; font-family: 'Inter', sans-serif; outline: none; }
+  .edit-input:focus { border-color: var(--accent); }
+  .edit-btns { display: flex; gap: 8px; margin-top: 14px; }
+  .edit-save { flex: 1; padding: 9px; background: var(--accent); border: none; border-radius: var(--radius-sm); color: #0f1117; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .edit-cancel { padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .big-add-btn { width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: var(--radius); color: #0f1117; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 14px; font-family: 'Unbounded', sans-serif; letter-spacing: -0.3px; transition: filter 0.15s; }
+  .big-add-btn:hover { filter: brightness(1.12); }
+  .print-btn { width: 100%; padding: 12px; background: var(--blue); border: none; border-radius: var(--radius-sm); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 8px; font-family: 'Inter', sans-serif; }
+  .print-btn:hover { filter: brightness(1.1); }
+  @media print {
+    body { background: #fff; color: #000; padding: 16px; }
+    .header-title { font-size: 18px; color: #000; }
+    .header-sub { color: #555; }
+    .big-add-btn, .reset-btn, .print-btn, .item-actions,
+    .section-add-btn, .add-item-row, .copy-btn,
+    .stats, .progress-bar, .luggage-bar { display: none !important; }
+    .section { border: 1px solid #ccc; border-radius: 8px; margin-bottom: 8px; break-inside: avoid; }
+    .section-header { background: #f5f5f5 !important; }
+    .section-body { display: block !important; }
+    .item { border-bottom: 1px solid #eee; padding: 6px 12px; }
+    .item.checked .item-name { text-decoration: line-through; color: #999; }
+    .checkbox { border: 1.5px solid #999; border-radius: 4px; }
+    .item.checked .checkbox { background: #34c759; border-color: #34c759; }
+    .note-box { border: 1px solid #ccc; background: #f9f9f9; color: #555; }
+  }
+  .add-overlay { display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .add-overlay.show { display: flex; }
+  .add-modal { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 380px; }
+  .add-modal h3 { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+  .edit-input option { background: var(--surface2); color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Чемодан</div>
+</div>
+
+<div class="luggage-bar">
+  <div class="lug">
+    <div class="lug-icon">🧳</div>
+    <div class="lug-val" style="color:var(--accent)">20 кг</div>
+    <div class="lug-label">Багаж сумма трёх измерений до 158 см - 3 шт</div>
+  </div>
+  <div class="lug">
+    <div class="lug-icon">🎒</div>
+    <div class="lug-val" style="color:var(--blue)">5 кг</div>
+    <div class="lug-label">Ручная кладь 40×30×20 - 3 шт</div>
+  </div>
+  <div class="lug">
+    <div class="lug-icon">🍼</div>
+    <div class="lug-val" style="color:var(--teal, #4fc8a0)">+коляска</div>
+    <div class="lug-label">Сдать у трапа</div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="total-count">0</div><div class="stat-label">всего вещей</div></div>
+  <div class="stat"><div class="stat-val" id="checked-count">0</div><div class="stat-label">собрано</div></div>
+  <div class="stat"><div class="stat-val" id="left-count">0</div><div class="stat-label">осталось</div></div>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-label"><span>Прогресс сборки</span><span id="progress-pct">0%</span></div>
+  <div class="bar-bg"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+</div>
+
+<div class="note-box">💡 Нажмите на вещь чтобы отметить как собранную. Прогресс сохраняется в браузере.<br>⚠️ Багаж 20 кг сумма измерений до 158 см — считай тщательно! Ручная кладь 5 кг строго 40×30×20 см.</div>
+
+<button class="big-add-btn" onclick="openAddForm()">+ Добавить вещь</button>
+
+<div class="add-overlay" id="addOverlay">
+  <div class="add-modal">
+    <h3>Добавить вещь</h3>
+    <div class="edit-field">
+      <div class="edit-label">Список (раздел)</div>
+      <select class="edit-input" id="addSection"></select>
+    </div>
+    <div class="edit-field">
+      <div class="edit-label">Название</div>
+      <input class="edit-input" id="addName" type="text" placeholder="Название вещи">
+    </div>
+    <div class="edit-field">
+      <div class="edit-label">Количество</div>
+      <input class="edit-input" id="addQty" type="text" placeholder="2, 3 пары...">
+    </div>
+    <div class="edit-field">
+      <div class="edit-label">Комментарий</div>
+      <input class="edit-input" id="addNote" type="text" placeholder="необязательно">
+    </div>
+    <div class="edit-btns">
+      <button class="edit-cancel" onclick="closeAddForm()">Отмена</button>
+      <button class="edit-save" onclick="submitAddForm()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<div class="edit-overlay" id="editOverlay">
+  <div class="edit-modal">
+    <h3>Редактировать</h3>
+    <div class="edit-field"><div class="edit-label">Название</div><input class="edit-input" id="editName" type="text"></div>
+    <div class="edit-field"><div class="edit-label">Количество</div><input class="edit-input" id="editQty" type="text" placeholder="× 1, × 2 пары..."></div>
+    <div class="edit-field"><div class="edit-label">Примечание</div><input class="edit-input" id="editNote" type="text" placeholder="необязательно"></div>
+    <div class="edit-btns">
+      <button class="edit-cancel" onclick="closeEdit()">Отмена</button>
+      <button class="edit-save" onclick="saveEdit()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div id="sections"></div>
+<button class="reset-btn" onclick="resetAll()">↺ Сбросить все отметки</button>
+<button class="print-btn" onclick="window.print()">🖨 Распечатать / Сохранить PDF</button>
+
+<script>
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const sections = [
+  {
+    icon: '👗', color: '#e06fa0', bg: '#e06fa015',
+    title: 'Мама', who: 'k',
+    items: [
+      { name: 'Платье/сарафан лёгкий', qty: '× 3', note: 'Хлопок или лён' },
+      { name: 'Футболка', qty: '× 3' },
+      { name: 'Шорты', qty: '× 1' },
+      { name: 'Льняные брюки', qty: '× 1' },
+      { name: 'Комбез', qty: '× 1' },
+      { name: 'Рубашка Uniqlo', qty: '× 1' },
+      { name: 'Лёгкие брюки/джинсы', qty: '× 1', note: 'На экскурсию и прохладный вечер' },
+      { name: 'Купальник', qty: '× 2', note: 'Один сохнет — второй надет' },
+      { name: 'Пляжная накидка/парео', qty: '× 1' },
+      { name: 'Нижнее бельё', qty: '× 6' },
+      { name: 'Носки', qty: '× 3 пары' },
+      { name: 'Лёгкая кофта/кардиган', qty: '× 1', note: 'Кондиционер в помещениях' },
+      { name: 'Ветровка', qty: '× 1' },
+      { name: 'Пижама', qty: '× 1' },
+      { name: 'Сандалии/вьетнамки', qty: '× 1 пара' },
+      { name: 'Кроссовки/сникеры', qty: '× 1 пара', note: 'Обязательно на экскурсию — весь день ходьба' },
+      { name: 'Розовая рубашка/шорты', qty: '', note: '' },
+      { name: 'Шляпа или панама', qty: '× 1' },
+      { name: 'Солнечные очки', qty: '× 1' },
+      { name: 'Небольшая сумка через плечо', qty: '× 1' },
+      { name: 'Зонт складной', qty: '× 1' },
+    ]
+  },
+  {
+    icon: '🧒', color: '#5b9cf6', bg: '#5b9cf615',
+    title: 'Старший ребёнок', who: 'n',
+    items: [
+      { name: 'Футболка', qty: '× 5', note: 'Хлопок' },
+      { name: 'Шорты', qty: '× 3' },
+      { name: 'Лёгкие штаны', qty: '× 1', note: 'На экскурсию и вечер' },
+      { name: 'Плавки', qty: '× 2' },
+      { name: 'Нижнее бельё', qty: '× 6' },
+      { name: 'Носки', qty: '× 4 пары' },
+      { name: 'Лёгкая кофта/худи', qty: '× 1' },
+      { name: 'Ветровка', qty: '× 1' },
+      { name: 'Пижама', qty: '× 1' },
+      { name: 'Сандалии', qty: '× 1 пара' },
+      { name: 'Кроссовки', qty: '× 1 пара', note: 'Обязательно — экскурсия в пещеру и каньон' },
+      { name: 'Коралки пляжные', qty: '× 1 пара' },
+      { name: 'Зубная щётка + паста', qty: '× 1'},
+      { name: 'Шампунь + гель для душа', qty: '', note: 'Дорожный формат или 1 флакон' },
+      { name: 'Дезодорант', qty: '× 1' },
+      { name: 'Крем SPF 50 для ребёнка', qty: '× 1' },
+      { name: 'Книга или комикс', qty: '× 1' },
+      { name: 'Телефон + зарядка', qty: '' },
+      { name: 'Настольная игра компактная', qty: '× 1', note: 'На вечер дома — UNO, Дорак и т.д.' },
+      { name: 'Бутылка многоразовая для воды', qty: '', note: '' },
+      { name: 'Снеки в догору', qty: '', note: '' },
+      { name: 'Сухой мешок для мокрых вещей', qty: '× 1' },
+      { name: 'Шляпа или панама', qty: '× 1' },
+      { name: 'Солнечные очки', qty: '× 1' },
+      { name: 'Зонт складной', qty: '× 1' },
+      
+    ]
+  },
+  {
+    icon: '👶', color: '#4fc8a0', bg: '#4fc8a015',
+    title: 'Младший ребёнок', who: 'l',
+    items: [
+      { name: 'Футболка', qty: '× 6', note: 'Дети пачкаются быстро — с запасом' },
+      { name: 'Шорты', qty: '× 3' },
+      { name: 'Лёгкий комбинезон/боди', qty: '× 2' },
+      { name: 'Плавки', qty: '× 3' },
+      { name: 'UV-купальный костюм', qty: '× 1', note: 'Нежная кожа малыша — обязательно!' },
+      { name: 'Нижнее бельё/трусики', qty: '× 8' },
+      { name: 'Носки', qty: '× 5 пар' },
+      { name: 'Лёгкая кофта', qty: '× 1' },
+      { name: 'Дождевик детский', qty: '× 1', note: 'С коляской зонт неудобен' },
+      { name: 'Пижама', qty: '× 2', note: 'Ночью потеет' },
+      { name: 'Сандалии с фиксацией', qty: '× 1 пара', note: 'Не слетают при ходьбе' },
+      { name: 'Кроссовки', qty: '× 1 пара' },
+      { name: 'Коралки пляжные', qty: '× 1 пара' },
+    ]
+  },
+  {
+    icon: '🧴', color: '#a78bfa', bg: '#a78bfa15',
+    title: 'Гигиена и уход', who: 'all',
+    items: [
+      { name: 'Зубные щётки + паста', qty: '× 2', note: 'На каждого' },
+      { name: 'Детский шампунь', qty: '× 1' },
+      { name: 'Детский крем SPF 50+', qty: '× 1' },
+      { name: 'Влажные салфетки', qty: '× 3–4 пачки', note: 'Особенно для малыша' },
+      { name: 'Расчёска', qty: '' },
+      { name: 'Резинки для волос', qty: '' },
+      { name: 'Дезодорант', qty: '' },
+      { name: 'Ватные палочки', qty: '' },
+      { name: 'Прокладки/тампоны', qty: '', note: 'Запас на весь отпуск' },
+    ]
+  },
+  {
+    icon: '👶', color: '#4fc8a0', bg: '#4fc8a015',
+    title: 'Детское для малыша', who: 'l',
+    items: [
+      { name: 'Накладки на кровать от протеканий', qty: '× 3–4' },
+      { name: 'Накладка на туалет' },
+      { name: 'Детское мыло', qty: '× 1' },
+      { name: 'Детский крем/масло', qty: '× 1' },    
+      { name: 'Небольшая игрушка в самолёт', qty: '× 1', note: 'Любимая — не новая' },
+      { name: 'Раскраска + фломастеры', qty: '× 1', note: 'В самолёт — спасение!' },
+      { name: 'Любимая игрушка для сна', qty: '× 1', note: 'Без неё сон будет сложнее' },
+      { name: 'Жидкая каша', qty: '× 1' },
+      { name: 'Пледик в самолёт', qty: '× 1' },
+      
+    ]
+  },
+  {
+    icon: '💊', color: '#fb923c', bg: '#fb923c15',
+    title: 'Аптечка', who: 'all',
+    items: [
+      { name: 'Нурофен суспензия детская', qty: '× 1', note: 'Для малыша — везти из дома' },
+      { name: 'Парацетамол таблетки', qty: '× 1 уп.', note: 'Взрослые' },
+      { name: 'Свечи Цефекон Д', qty: '× 1 уп.', note: 'Малышу — резерв при рвоте' },
+      { name: 'Анаферон детский', qty: '× 1 уп.', note: 'Замена Виферону, хранение при комнатной т°' },
+      { name: 'Смекта', qty: '× 10 пак.' },
+      { name: 'Регидрон', qty: '× 5 пак.' },
+      { name: 'Энтерофурил суспензия', qty: '× 1', note: 'Для детей' },
+      { name: 'Нош-па таблетки', qty: '× 1 уп.' },
+      { name: 'Мезим/Панкреатин', qty: '× 1 уп.' },
+      { name: 'Аква Марис детский', qty: '× 1', note: 'Промывание носа малышу' },
+      { name: 'Називин 0.025% капли', qty: '× 1', note: 'Малышу в нос' },
+      { name: 'Мирамистин 150 мл', qty: '× 1', note: 'Купить на месте' },
+      { name: 'Офтальмоферон', qty: '× 1', note: 'Везти из дома' },
+      { name: 'Зиртек капли', qty: '× 1', note: 'Малышу — аллергия' },
+      { name: 'Фенистил гель', qty: '× 1', note: 'Укусы, раздражение' },
+      { name: 'Пантенол спрей', qty: '× 1', note: 'Солнечный ожог' },
+      { name: 'Банеоцин порошок', qty: '× 1', note: 'Ссадины от гальки' },
+      { name: 'Пластыри набор', qty: '× 1 уп.' },
+      { name: 'Бинт + лейкопластырь рулонный', qty: '' },
+      { name: 'Термометр', qty: '× 1' },
+      { name: 'Драмина детская', qty: '× 1 уп.', note: 'На водную прогулку' },
+    ]
+  },
+  {
+    icon: '🏖️', color: '#e8a945', bg: '#e8a94515',
+    title: 'Пляж', who: 'all',
+    items: [      
+      { name: 'Пляжный коврик/подстилка', qty: '× 1' },
+      { name: 'Жилет для малыша', qty: '× 1' },
+      { name: 'Пляжные игрушки', qty: '', note: 'Ведёрко, лопатка — купить на месте' },
+    ]
+  },
+  {
+    icon: '📱', color: '#6abf69', bg: '#6abf6915',
+    title: 'Электроника и зарядки', who: 'all',
+    items: [
+      { name: 'Телефоны + зарядки', qty: '× 2' },         
+      { name: 'Пауэрбанк', qty: '× 1', note: 'На длительную экскурсию — весь день на улице' },      
+    ]
+  },
+  {
+    icon: '📄', color: '#fb923c', bg: '#fb923c15',
+    title: 'Документы', who: 'all',
+    items: [
+      { name: 'Паспорта', qty: '', note: 'На всех членов семьи' },
+      { name: 'Свидетельства о рождении детей', qty: '× 2' },
+      { name: 'Паспорт РФ', qty: '', note: 'Вписан ребёнок — возьми на всякий случай' },      
+      { name: 'Медицинские полисы', qty: '× 3' },
+      { name: 'Распечатка брони жилья', qty: '× 1' },
+      { name: 'Водительские права', qty: '', note: '' },
+      
+    ]
+  },
+  {
+    icon: '🎒', color: '#5b9cf6', bg: '#5b9cf615',
+    title: 'Ручная кладь — распределение', who: 'all',
+    items: [
+      { name: 'Мама: документы + аптечка детская', qty: '5 кг', note: 'Суспензии, капли — в ручную кладь · размер 40×30×20 см' },
+      { name: 'Мама: смена одежды малышу', qty: '', note: 'На случай протечки в самолёте' },
+      { name: 'Мама: перекус и вода для детей', qty: '', note: 'Купить после досмотра' },
+      { name: 'Старший ребёнок: рюкзак', qty: '5 кг' },
+      { name: 'Старший ребёнок: смена футболки + книга', qty: '' },
+      { name: 'Младший ребёнок: любимая игрушка + раскраска', qty: '5 кг (у мамы)' },
+      { name: 'Коляска — сдать у трапа', qty: '', note: 'Получить там же при выходе' },
+    ]
+  },
+];
+
+let uidC = 0;
+function uid() { return 'i' + (++uidC) + '_' + Date.now(); }
+
+let state = (function() {
+  try {
+    const raw = localStorage.getItem('packing_list_v1');
+    return (raw && JSON.parse(raw)) || buildState();
+  } catch(e) { return buildState(); }
+})();
+
+function buildState() {
+  return { sections: sections.map(s => ({
+    icon: s.icon, color: s.color||'', bg: s.bg, title: s.title, who: s.who,
+    items: s.items.map(it => ({ id: uid(), name: it.name, qty: it.qty||'', note: it.note||'', checked: it.checked||false }))
+  }))};
+}
+function persist() {
+  try { localStorage.setItem('packing_list_v1', JSON.stringify(state)); } catch(e) {}
+}
+
+const container = document.getElementById('sections');
+let openSections = new Set([0]);
+let openAddRows = new Set();
+let editTarget = null;
+
+function render() {
+  container.innerHTML = '';
+  state.sections.forEach((s, si) => {
+    const div = document.createElement('div');
+    div.className = 'section';
+    const isOpen = openSections.has(si);
+
+    const itemsHtml = s.items.map(item => `
+      <div class="item${item.checked ? ' checked' : ''}" id="item-${item.id}">
+        <div class="checkbox" onclick="toggleItem(${si},'${item.id}')"><span class="checkmark">✓</span></div>
+        <div class="item-content" onclick="toggleItem(${si},'${item.id}')">
+          <div class="item-name">${esc(item.name)}${item.qty ? ` <span style="color:var(--text3);font-size:11px">${esc(item.qty)}</span>` : ''}</div>
+          ${item.note ? `<div class="item-note">${esc(item.note)}</div>` : ''}
+        </div>
+        <div class="item-actions">
+          <button class="action-btn" onclick="openEdit(${si},'${item.id}')" title="Редактировать">✏️</button>
+          <button class="action-btn del" onclick="deleteItem(${si},'${item.id}')" title="Удалить">✕</button>
+        </div>
+      </div>`).join('');
+
+    const addOpen = openAddRows.has(si);
+    div.innerHTML = `
+      <div class="section-header" onclick="toggleSection(this,${si})">
+        <div class="section-icon" style="background:${s.bg}">${s.icon}</div>
+        <span class="section-title">${esc(s.title)}</span>
+        <span class="section-count">${s.items.length} вещей</span>
+        <button class="section-add-btn" onclick="event.stopPropagation();toggleAddRow(${si})" title="Добавить вещь">+</button>
+        <span class="section-chevron" style="transform:${isOpen?'rotate(180deg)':''}">▾</span>
+      </div>
+      <div class="section-body${isOpen?' open':''}">
+        ${itemsHtml}
+        <button class="copy-btn" id="copy-btn-${si}" onclick="copySection(${si})">⎘ Скопировать список</button>
+        <div class="add-item-row${addOpen?' open':''}">
+          <input class="add-input" id="add-${si}" placeholder="Название вещи..." onkeydown="if(event.key==='Enter')addItem(${si})">
+          <input class="add-input" id="add-qty-${si}" placeholder="Количество (напр. 2 пары)">
+          <input class="add-input" id="add-note-${si}" placeholder="Комментарий...">
+          <button class="add-btn" onclick="addItem(${si})">+ Добавить</button>
+        </div>
+      </div>`;
+    container.appendChild(div);
+  });
+  updateStats();
+}
+
+function toggleAddRow(si) {
+  if (openAddRows.has(si)) {
+    openAddRows.delete(si);
+  } else {
+    openAddRows.add(si);
+    openSections.add(si);
+  }
+  render();
+  if (openAddRows.has(si)) {
+    const inp = document.getElementById('add-'+si);
+    if (inp) inp.focus();
+  }
+}
+
+function toggleItem(si, id) {
+  const item = state.sections[si].items.find(i => i.id===id);
+  if (item) { item.checked = !item.checked; persist(); render(); }
+}
+function deleteItem(si, id) {
+  state.sections[si].items = state.sections[si].items.filter(i => i.id!==id);
+  persist(); render();
+}
+function addItem(si) {
+  const inp = document.getElementById('add-'+si);
+  const val = inp.value.trim();
+  if (!val) return;
+  let qty = document.getElementById('add-qty-'+si).value.trim();
+  if (qty && !qty.startsWith('×')) qty = '× ' + qty;
+  const note = document.getElementById('add-note-'+si).value.trim();
+  state.sections[si].items.push({ id: uid(), name: val, qty, note, checked: false });
+  openSections.add(si);
+  openAddRows.delete(si);
+  persist(); render();
+}
+function openEdit(si, id) {
+  const item = state.sections[si].items.find(i => i.id===id);
+  if (!item) return;
+  editTarget = { si, id };
+  document.getElementById('editName').value = item.name;
+  document.getElementById('editQty').value = item.qty;
+  document.getElementById('editNote').value = item.note;
+  document.getElementById('editOverlay').classList.add('show');
+}
+function closeEdit() { document.getElementById('editOverlay').classList.remove('show'); editTarget = null; }
+function saveEdit() {
+  if (!editTarget) return;
+  const item = state.sections[editTarget.si].items.find(i => i.id===editTarget.id);
+  if (item) {
+    item.name = document.getElementById('editName').value.trim() || item.name;
+    item.qty = document.getElementById('editQty').value.trim();
+    item.note = document.getElementById('editNote').value.trim();
+  }
+  persist(); closeEdit(); render();
+}
+document.getElementById('editOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('editOverlay')) closeEdit();
+});
+
+function toggleSection(header, si) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+  header.querySelector('.section-chevron').style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+  if (body.classList.contains('open')) openSections.add(si); else openSections.delete(si);
+}
+
+function updateStats() {
+  let total=0, checked=0;
+  state.sections.forEach(s => s.items.forEach(i => { total++; if(i.checked) checked++; }));
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('checked-count').textContent = checked;
+  document.getElementById('left-count').textContent = total - checked;
+  const pct = total ? Math.round(checked/total*100) : 0;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('bar').style.width = pct + '%';
+}
+
+function resetAll() {
+  state.sections.forEach(s => s.items.forEach(i => i.checked=false));
+  persist(); render();
+}
+
+function openAddForm() {
+  const sel = document.getElementById('addSection');
+  sel.innerHTML = state.sections.map((s, i) => `<option value="${i}">${esc(s.icon)} ${esc(s.title)}</option>`).join('');
+  document.getElementById('addName').value = '';
+  document.getElementById('addQty').value = '';
+  document.getElementById('addNote').value = '';
+  document.getElementById('addOverlay').classList.add('show');
+  document.getElementById('addName').focus();
+}
+function closeAddForm() { document.getElementById('addOverlay').classList.remove('show'); }
+function submitAddForm() {
+  const si = parseInt(document.getElementById('addSection').value, 10);
+  const name = document.getElementById('addName').value.trim();
+  if (!name) { document.getElementById('addName').focus(); return; }
+  let qty = document.getElementById('addQty').value.trim();
+  if (qty && !qty.startsWith('×')) qty = '× ' + qty;
+  const note = document.getElementById('addNote').value.trim();
+  state.sections[si].items.push({ id: uid(), name, qty, note, checked: false });
+  openSections.add(si);
+  persist(); closeAddForm(); render();
+}
+document.getElementById('addOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('addOverlay')) closeAddForm();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeEdit(); closeAddForm(); }
+});
+
+function copySection(si) {
+  const s = state.sections[si];
+  const lines = [s.title];
+  s.items.forEach((it, i) => {
+    let line = `${i + 1}. ${it.name}`;
+    if (it.qty)  line += ` ${it.qty}`;
+    if (it.note) line += ` — ${it.note}`;
+    lines.push(line);
+  });
+  const text = lines.join('\n');
+  const btn = document.getElementById('copy-btn-' + si);
+  function showCopied() {
+    btn.textContent = '✓ Скопировано';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Скопировать список'; btn.classList.remove('copied'); }, 2000);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+  } else {
+    fallbackCopy(text, showCopied);
+  }
+}
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+
+render();
+</script>
+</body>
+</html>
