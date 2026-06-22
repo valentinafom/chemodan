@@ -1,4 +1,4 @@
-const CACHE = 'chemodan-v3';
+const CACHE = 'chemodan-v4';
 const FILES = ['./chemodan.html', './manifest.json'];
 
 self.addEventListener('install', e => {

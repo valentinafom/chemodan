@@ -2715,10 +2715,11 @@ function renderTodoSection() {
   const todoContainer = document.getElementById('todo-container');
   if (!todoContainer) return;
   todoContainer.innerHTML = '';
-  const hasTasks = state.sections.some(s => s.type === 'action');
+  const hasTasks = state.sections.some(s => s.type === 'action' && !(s.isDefault && s.items.length === 0));
   document.getElementById('tasks-onboarding').style.display = hasTasks ? 'none' : '';
   state.sections.forEach((s, si) => {
     if (s.type !== 'action') return;
+    if (s.isDefault && s.items.length === 0) return;
     const isOpen = openSections.has(si);
     const taskTotal = s.items.length;
     const taskChecked = s.items.filter(i => i.checked).length;
@@ -2958,7 +2959,7 @@ function renderQuickActions(tab) {
     .join('');
 
   if (tab === 'tasks') {
-    box.style.display = state.sections.some(s => s.type === 'action') ? '' : 'none';
+    box.style.display = state.sections.some(s => s.type === 'action' && !(s.isDefault && s.items.length === 0)) ? '' : 'none';
   } else if (tab === 'bags') {
     const hasTransport = state.transport && state.transport.length > 0;
     const hasBags = state.bags && Object.keys(state.bags).some(k => !state.bags[k].deleted);
