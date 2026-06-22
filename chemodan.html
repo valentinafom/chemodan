@@ -2252,9 +2252,9 @@ function bagSelectEmojis(selectedId) {
 function renderLuggageBar() {
   const bar = document.getElementById('luggage-bar');
   if (!bar) return;
-  const bags = state.bags || BAG_DEFAULTS;
-  bar.innerHTML = 
-    Object.keys(bags).filter(id => !bagMeta(id).deleted).map(id => {
+  if (!state.bags) { bar.innerHTML = ''; return; }                                                                                                                        
+  bar.innerHTML =                                                                                                                                                         
+  Object.keys(state.bags).filter(id => !state.bags[id].deleted).map(id => {    
       const b = bagMeta(id);
       return `<div class="lug" id="lug-${id}" onclick="openBagView('${id}')">
         <div class="lug-icon">${esc(b.icon||'📦')}</div>
