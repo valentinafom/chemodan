@@ -1082,10 +1082,6 @@ function switchTab(tab) {
   localStorage.setItem('activeTab', tab);
 }
 
-(function() {
-  const saved = localStorage.getItem('activeTab');
-  switchTab(saved && ['items','tasks','bags','events'].includes(saved) ? saved : 'bags');
-})();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -2861,6 +2857,9 @@ renderTransportBar();
 render();
 renderHeaderSub();
 renderEvents();
+
+const _savedTab = localStorage.getItem('activeTab');
+switchTab(_savedTab && ['items','tasks','bags','events'].includes(_savedTab) ? _savedTab : 'bags');
 
 // ── Events ──────────────────────────────────────────────
 function renderEvents() {
