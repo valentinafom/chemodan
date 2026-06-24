@@ -1,5 +1,5 @@
-const CACHE = 'chemodan-v5';
-const FILES = ['./chemodan.html', './manifest.json'];
+const CACHE = 'chemodan-v7';
+const FILES = ['./chemodan.html', './i18n.js', './icons.js', './manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

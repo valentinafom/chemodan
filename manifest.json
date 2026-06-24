@@ -1,6 +1,6 @@
 {
-  "name": "Чемодан",
-  "short_name": "Чемодан",
+  "name": "Suitcase",
+  "short_name": "Suitcase",
   "start_url": "./chemodan.html",
   "display": "standalone",
   "background_color": "#f5f5f7",
